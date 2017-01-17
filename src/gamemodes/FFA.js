@@ -1,3 +1,4 @@
+'use strict';
 var Mode = require('./Mode');
 
 function FFA() {
@@ -42,14 +43,16 @@ FFA.prototype.onPlayerSpawn = function (gameServer, player) {
     var pos, startMass;
 
     // Check if there are ejected mass in the world.
-    if (gameServer.nodesEjected.length > 0) {
+    let nodesEjected = gameServer.getEjectedNodes();
+    if (nodesEjected.length > 0) {
       var index = Math.floor(Math.random() * 100) + 1;
       if (index <= gameServer.config.ejectSpawnPlayer) {
         // Get ejected cell
-        var index = Math.floor(Math.random() * gameServer.nodesEjected.length);
-        var e = gameServer.nodesEjected[index];
+        var index = Math.floor(Math.random() * nodesEjected.length);
+        var e = nodesEjected[index];
 
         if (e.moveEngineTicks == 0) {
+        
           // Remove ejected mass
           gameServer.removeNode(e);
 
@@ -58,7 +61,8 @@ FFA.prototype.onPlayerSpawn = function (gameServer, player) {
             x: e.position.x,
             y: e.position.y
           };
-          startMass = e.mass;
+          startMass = gameServer.config.playerStartMass;
+          ;
 
           var color = e.getColor();
           player.setColor({
@@ -81,12 +85,13 @@ FFA.prototype.onServerInit = function (gameServer) {
 FFA.prototype.updateLB = function (gameServer) {
   var lb = gameServer.leaderboard;
   // Loop through all clients
-  for (var i = 0; i < gameServer.clients.length; i++) {
-    if (typeof gameServer.clients[i] == "undefined") {
+  var clients = gameServer.getClients();
+  for (var i = 0; i < clients.length; i++) {
+    if (typeof clients[i] == "undefined") {
       continue;
     }
 
-    var player = gameServer.clients[i].playerTracker;
+    var player = clients[i].playerTracker;
     var playerScore = player.getScore(true);
     if (player.cells.length <= 0) {
       continue;

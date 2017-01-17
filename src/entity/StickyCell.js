@@ -1,3 +1,6 @@
+'use strict';
+const utilities = require('../core/utilities.js');
+
 var Cell = require('./Cell');
 var Virus = require('./Virus');
 var MotherCell = require('./MotherCell');
@@ -28,7 +31,7 @@ StickyCell.prototype.update = function (gameServer) {
 
     // Remain attached to the acquired victim
     var check = this.acquired;
-    var dist = check.getDist(check.position.x, check.position.y, this.position.x, this.position.y);
+    var dist = gameServer.getDist(check.position.x, check.position.y, this.position.x, this.position.y);
     var collisionDist = check.getSize() + this.radius;
 
     var dY = this.position.y - check.position.y;
@@ -59,9 +62,10 @@ StickyCell.prototype.update = function (gameServer) {
   };
 
   // Look for victims
-  for (var i in gameServer.nodesPlayer) {
-    var check = gameServer.nodesPlayer[i];
-
+  let playerNodes = gameServer.getPlayerNodes();
+  for (var i in playerNodes) {
+    var check = playerNodes[i];
+if (check.quadrant != this.quadrant) continue;
     // Do boundary (non-absorbing) collision check
     var collisionDist = check.getSize() + this.radius;
 
@@ -87,7 +91,7 @@ StickyCell.prototype.update = function (gameServer) {
 };
 
 StickyCell.prototype.onAdd = function (gameServer) {
-  gameServer.gameMode.nodesSticky.push(this);
+  gameServer._nodesSticky.push(this);
 };
 
 StickyCell.prototype.onConsume = function (consumer, gameServer) {
@@ -107,9 +111,9 @@ StickyCell.prototype.onConsume = function (consumer, gameServer) {
 StickyCell.prototype.virusOnConsume = Virus.prototype.onConsume;
 
 StickyCell.prototype.onRemove = function (gameServer) {
-  var index = gameServer.gameMode.nodesSticky.indexOf(this);
+  var index = gameServer._nodesSticky.indexOf(this);
   if (index != -1) {
-    gameServer.gameMode.nodesSticky.splice(index, 1);
+    gameServer._nodesSticky.splice(index, 1);
   }
 };
 

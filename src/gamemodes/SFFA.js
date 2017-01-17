@@ -1,10 +1,11 @@
+'use strict';
 var Mode = require('./Mode');
 
 function SFFA() {
   Mode.apply(this, Array.prototype.slice.call(arguments));
 
   this.ID = 7;
-  this.name = "SFFA";
+  this.name = "ShrinkingFFA";
   this.packetLB = 48;
 
   // Config (1 tick = 1000 ms)
@@ -37,7 +38,7 @@ SFFA.prototype.startGamePrep = function (gameServer) {
 };
 
 SFFA.prototype.startGame = function (gameServer) {
-  gameServer.run = true;
+  gameServer.running = true;
   this.gamePhase = 2;
   this.getSpectate(); // Gets a random person to spectate
   gameServer.config.playerDisconnectTime = this.dcTime; // Reset config
@@ -50,7 +51,7 @@ SFFA.prototype.endGame = function (gameServer) {
 };
 
 SFFA.prototype.endGameTimeout = function (gameServer) {
-  gameServer.run = false;
+  gameServer.running = false;
   this.gamePhase = 4;
   this.timer = this.endTime; // 30 Seconds
 };
@@ -62,29 +63,23 @@ SFFA.prototype.shrink = function (gameServer) {
   config.borderTop += this.borderDec;
   config.borderBottom -= this.borderDec;
 
-  var len = gameServer.nodes.length;
-  for (var i = 0; i < len; i++) {
-    var node = gameServer.nodes[i];
+   gameServer.getWorld().getNodes().forEach((node)=>{
 
     if ((!node) || (node.getType() == 0)) {
-      continue;
+      return;
     }
 
     // Move
     if (node.position.x < config.borderLeft) {
       gameServer.removeNode(node);
-      i--;
     } else if (node.position.x > config.borderRight) {
       gameServer.removeNode(node);
-      i--;
     } else if (node.position.y < config.borderTop) {
       gameServer.removeNode(node);
-      i--;
     } else if (node.position.y > config.borderBottom) {
       gameServer.removeNode(node);
-      i--;
     }
-  }
+  });
 
 };
 
@@ -108,21 +103,17 @@ SFFA.prototype.prepare = function (gameServer) {
   gameServer.config.borderRight = 7500;
   gameServer.config.borderTop = 0;
   gameServer.config.borderBottom = 7500;
-  var len = gameServer.nodes.length;
-  for (var i = 0; i < len; i++) {
-    var node = gameServer.nodes[0];
 
-    if (!node) {
-      continue;
-    }
-
+   gameServer.getWorld().getNodes().forEach((node)=>{
+    if (!node) return;
     gameServer.removeNode(node);
-  }
+    
+  })
 
   gameServer.bots.loadNames();
 
   // Pauses the server
-  gameServer.run = false;
+  gameServer.running = false;
   this.gamePhase = 0;
 
   // Get config values
@@ -262,7 +253,7 @@ SFFA.prototype.updateLB = function (gameServer) {
       lb[1] = this.contenders.length + " ";
       lb[2] = "Time Limit:";
       lb[3] = this.formatTime(this.timeLimit);
-      lb[4] = "Map Size:"
+      lb[4] = "Map Size:";
       lb[5] = (gameServer.config.borderRight - gameServer.config.borderLeft) + "," + (gameServer.config.borderBottom - gameServer.config.borderTop);
       lb[6] = "Shrinking in";
       lb[7] = this.formatsTime(this.stime);

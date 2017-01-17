@@ -6,4 +6,7 @@ module.exports = {
   UpdateNodes: require('./UpdateNodes'),
   UpdateLeaderboard: require('./UpdateLeaderboard'),
   DrawLine: require('./DrawLine'),
+  Chat: require('./Chat'),
+  DataPacket: require('./DataPacket'),
+  ClientPacket: require('./ClientPacket'),
 };

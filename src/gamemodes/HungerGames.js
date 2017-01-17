@@ -1,3 +1,4 @@
+'use strict';
 var Tournament = require('./Tournament');
 var Entity = require('../entity');
 
@@ -79,14 +80,14 @@ HungerGames.prototype.getPos = function () {
 };
 
 HungerGames.prototype.spawnFood = function (gameServer, mass, pos) {
-  var f = new Entity.Food(gameServer.getNextNodeId(), null, pos, mass, gameServer);
+  var f = new Entity.Food(gameServer.getWorld().getNextNodeId(), null, pos, mass, gameServer);
   f.setColor(gameServer.getRandomColor());
   gameServer.addNode(f);
   gameServer.currentFood++;
 };
 
 HungerGames.prototype.spawnVirus = function (gameServer, pos) {
-  var v = new Entity.Virus(gameServer.getNextNodeId(), null, pos, gameServer.config.virusStartMass);
+  var v = new Entity.Virus(gameServer.getWorld().getNextNodeId(), null, pos, gameServer.config.virusStartMass);
   gameServer.addNode(v);
 };
 
@@ -98,29 +99,23 @@ HungerGames.prototype.onPlayerDeath = function (gameServer) {
   config.borderBottom -= this.borderDec;
 
   // Remove all cells
-  var len = gameServer.nodes.length;
-  for (var i = 0; i < len; i++) {
-    var node = gameServer.nodes[i];
+  gameServer.getWorld().getNodes().forEach((node)=>{
 
     if ((!node) || (node.getType() == 0)) {
-      continue;
+      return;
     }
 
     // Move
     if (node.position.x < config.borderLeft) {
       gameServer.removeNode(node);
-      i--;
     } else if (node.position.x > config.borderRight) {
       gameServer.removeNode(node);
-      i--;
     } else if (node.position.y < config.borderTop) {
       gameServer.removeNode(node);
-      i--;
     } else if (node.position.y > config.borderBottom) {
       gameServer.removeNode(node);
-      i--;
     }
-  }
+  });
 };
 
 // Override

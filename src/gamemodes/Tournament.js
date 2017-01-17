@@ -1,3 +1,4 @@
+'use strict';
 var Mode = require('./Mode');
 
 function Tournament() {
@@ -35,7 +36,7 @@ Tournament.prototype.startGamePrep = function (gameServer) {
 };
 
 Tournament.prototype.startGame = function (gameServer) {
-  gameServer.run = true;
+  gameServer.running = true;
   this.gamePhase = 2;
   this.getSpectate(); // Gets a random person to spectate
   gameServer.config.playerDisconnectTime = this.dcTime; // Reset config
@@ -48,7 +49,7 @@ Tournament.prototype.endGame = function (gameServer) {
 };
 
 Tournament.prototype.endGameTimeout = function (gameServer) {
-  gameServer.run = false;
+  gameServer.running = false;
   this.gamePhase = 4;
   this.timer = this.endTime; // 30 Seconds
 };
@@ -69,21 +70,20 @@ Tournament.prototype.getSpectate = function () {
 
 Tournament.prototype.prepare = function (gameServer) {
   // Remove all cells
-  var len = gameServer.nodes.length;
-  for (var i = 0; i < len; i++) {
-    var node = gameServer.nodes[0];
+  
+  
 
-    if (!node) {
-      continue;
-    }
-
+  gameServer.getWorld().getNodes().forEach((node)=>{
+    if (!node) return;
     gameServer.removeNode(node);
-  }
+    
+  })
+ 
 
   gameServer.bots.loadNames();
 
   // Pauses the server
-  gameServer.run = false;
+  gameServer.running = false;
   this.gamePhase = 0;
 
   // Get config values

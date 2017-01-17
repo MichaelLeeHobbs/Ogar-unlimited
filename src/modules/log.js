@@ -1,11 +1,11 @@
 var fs = require("fs");
 var util = require('util');
 var EOL = require('os').EOL;
-
 function Log() {
   // Nothing
+  
 }
-
+local = false;
 module.exports = Log;
 
 Log.prototype.setup = function (gameServer) {
@@ -13,7 +13,15 @@ Log.prototype.setup = function (gameServer) {
     // Make log folder
     fs.mkdir('./logs');
   }
-
+  local = false;
+  if (gameServer.language != "en") {
+  try {
+    local = require('../locals/' + gameServer.language);
+    
+  } catch (e) {
+    
+  }
+}
   switch (gameServer.config.serverLogLevel) {
     case 2:
       ip_log = fs.createWriteStream('./logs/ip.log', {
@@ -34,6 +42,28 @@ Log.prototype.setup = function (gameServer) {
       });
 
       console.log = function (d) { //
+      if (local) {
+      var lang;
+        for (var i in local.lang) {
+var notfound = false;
+var orig = local.lang[i].original;
+  for (var j in orig) {
+  if (d.indexOf(orig[j]) == -1) {
+  notfound = true;
+  break;
+  }
+  }
+if (!notfound) {
+lang = local.lang[i];
+break;
+}
+}
+if (lang) {
+for (var i in lang.original) {
+d = d.replace(lang.original[i],lang.replaceto[i]);
+}
+}
+}
         console_log.write(util.format(d) + EOL);
         process.stdout.write(util.format(d) + EOL);
       };

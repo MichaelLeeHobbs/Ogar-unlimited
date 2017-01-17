@@ -1,3 +1,4 @@
+'use strict';
 var FFA = require('./FFA'); // Base gamemode
 var Cell = require('../entity/Cell');
 var MotherCell = require('../entity/MotherCell');
@@ -13,16 +14,12 @@ function Experimental2() {
   this.specByLeaderboard = true;
 
   // Gamemode Specific Variables
-  this.nodesMother = [];
-  this.nodesSticky = [];
-  this.movingVirusCount = 0;
   this.tickMother = 0;
   this.tickMotherS = 0;
 
   // Config
   this.motherCellMass = 200;
   this.motherCellMaxMass = 400;
-  this.motherUpdateInterval = 5; // How many ticks it takes to update the mother cell (1 tick = 50 ms)
   this.motherSpawnInterval = 100; // How many ticks it takes to spawn another mother cell - Currently 5 seconds
   this.motherMinAmount = 5;
 
@@ -42,33 +39,19 @@ Experimental2.prototype = new FFA();
 
 // Gamemode Specific Functions
 
-Experimental2.prototype.updateMotherCells = function (gameServer) {
-  for (var i in this.nodesMother) {
-    var mother = this.nodesMother[i];
 
-    // Checks
-    mother.update(gameServer);
-    mother.checkEat(gameServer);
-  }
-};
 
-Experimental2.prototype.updateStickyCells = function (gameServer) {
-  for (var i in this.nodesSticky) {
-    var sticky = this.nodesSticky[i];
-
-    sticky.update(gameServer);
-  }
-};
 
 Experimental2.prototype.spawnMotherCell = function (gameServer) {
   // Checks if there are enough mother cells on the map
-  if (this.nodesMother.length < this.motherMinAmount) {
+  if (gameServer._nodesMother.length < this.motherMinAmount) {
     // Spawns a mother cell
     var pos = gameServer.getRandomPosition();
 
     // Check for players
-    for (var i = 0; i < gameServer.nodesPlayer.length; i++) {
-      var check = gameServer.nodesPlayer[i];
+    let nodesPlayer = gameServer.getPlayerNodes();
+    for (var i = 0; i < nodesPlayer.length; i++) {
+      var check = nodesPlayer[i];
 
       var r = check.getSize(); // Radius of checking player cell
 
@@ -100,20 +83,21 @@ Experimental2.prototype.spawnMotherCell = function (gameServer) {
     }
 
     // Spawn if no cells are colliding
-    var m = new MotherCell(gameServer.getNextNodeId(), null, pos, this.motherCellMass);
+    var m = new MotherCell(gameServer.getWorld().getNextNodeId(), null, pos, this.motherCellMass);
     gameServer.addNode(m);
   }
 };
 
 Experimental2.prototype.spawnMovingVirus = function (gameServer) {
   // Checks if there are enough moving viruses on the map
-  if (this.movingVirusCount < this.movingVirusMinAmount) {
+  if (gameServer.movingVirusCount < this.movingVirusMinAmount) {
     // Spawns a mother cell
     var pos = gameServer.getRandomPosition();
 
     // Check for players
-    for (var i = 0; i < gameServer.nodesPlayer.length; i++) {
-      var check = gameServer.nodesPlayer[i];
+    let nodesPlayer = gameServer.getPlayerNodes();
+    for (var i = 0; i < nodesPlayer.length; i++) {
+      var check = nodesPlayer[i];
 
       var r = check.getSize(); // Radius of checking player cell
 
@@ -145,25 +129,26 @@ Experimental2.prototype.spawnMovingVirus = function (gameServer) {
     }
 
     // Spawn if no cells are colliding
-    var m = new MovingVirus(gameServer.getNextNodeId(),
+    var m = new MovingVirus(gameServer.getWorld().getNextNodeId(),
       null,
       pos,
       this.movingVirusMass + Math.floor(50 * Math.random())
     );
-    gameServer.movingNodes.push(m);
-    gameServer.addNode(m);
+    
+    gameServer.addNode(m, 'moving');
   }
 };
 
 Experimental2.prototype.spawnStickyCell = function (gameServer) {
   // Checks if there are enough mother cells on the map
-  if (this.nodesSticky.length < this.stickyMinAmount) {
+  if (gameServer._nodesSticky.length < this.stickyMinAmount) {
     // Spawns a mother cell
     var pos = gameServer.getRandomPosition();
 
     // Check for players
-    for (var i = 0; i < gameServer.nodesPlayer.length; i++) {
-      var check = gameServer.nodesPlayer[i];
+    let nodesPlayer = gameServer.getPlayerNodes();
+    for (var i = 0; i < nodesPlayer.length; i++) {
+      var check = nodesPlayer[i];
 
       var r = check.getSize(); // Radius of checking player cell
 
@@ -195,9 +180,9 @@ Experimental2.prototype.spawnStickyCell = function (gameServer) {
     }
 
     // Spawn if no cells are colliding
-    var m = new StickyCell(gameServer.getNextNodeId(), null, pos, this.stickyMass);
+    var m = new StickyCell(gameServer.getWorld().getNextNodeId(), null, pos, this.stickyMass);
     //gameServer.movingNodes.push(m);
-    gameServer.addNode(m);
+    gameServer.addNode(m, 'moving');
   }
 };
 
@@ -215,27 +200,14 @@ Experimental2.prototype.onServerInit = function (gameServer) {
 Experimental2.prototype.onTick = function (gameServer) {
   // Create a beacon if one doesn't exist
   if (!this.beacon) {
-    this.beacon = new Beacon(gameServer.getNextNodeId(),
+    this.beacon = new Beacon(gameServer.getWorld().getNextNodeId(),
       null,
       gameServer.getRandomPosition(),
       this.beaconMass);
     gameServer.addNode(this.beacon);
   }
 
-  // Mother Cell updates and MovingVirus updates
-  if (this.tickMother >= this.motherUpdateInterval) {
-    this.updateMotherCells(gameServer);
-    this.tickMother = 0;
-  } else {
-    this.tickMother++;
-  }
 
-  if (this.tickSticky >= this.stickyUpdateInterval) {
-    this.updateStickyCells(gameServer);
-    this.tickSticky = 0;
-  } else {
-    this.tickSticky++;
-  }
 
   // Mother Cell Spawning
   if (this.tickMotherS >= this.motherSpawnInterval) {
@@ -250,8 +222,8 @@ Experimental2.prototype.onTick = function (gameServer) {
 
 Experimental2.prototype.onChange = function (gameServer) {
   // Remove all mother cells
-  for (var i in this.nodesMother) {
-    gameServer.removeNode(this.nodesMother[i]);
+  for (var i in gameServer._nodesMother) {
+    gameServer.removeNode(gameServer._nodesMother);
   }
   // Add back default functions
   gameServer.getRandomSpawn = require('../GameServer').prototype.getRandomSpawn;

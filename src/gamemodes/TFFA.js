@@ -1,3 +1,4 @@
+'use strict';
 var Mode = require('./Mode');
 
 function TFFA() {
@@ -26,7 +27,7 @@ TFFA.prototype = new Mode();
 // Gamemode Specific Functions
 
 TFFA.prototype.startGame = function (gameServer) {
-  gameServer.run = true;
+  gameServer.running = true;
   this.gamePhase = 2;
   this.getSpectate(); // Gets a random person to spectate
 };
@@ -38,7 +39,7 @@ TFFA.prototype.endGame = function (gameServer) {
 };
 
 TFFA.prototype.endGameTimeout = function (gameServer) {
-  gameServer.run = false;
+  gameServer.running = false;
   this.gamePhase = 3;
   this.timer = this.endTime; // 30 Seconds
 };
@@ -51,21 +52,17 @@ TFFA.prototype.getSpectate = function () {
 
 TFFA.prototype.prepare = function (gameServer) {
   // Remove all cells
-  var len = gameServer.nodes.length;
-  for (var i = 0; i < len; i++) {
-    var node = gameServer.nodes[0];
-
-    if (!node) {
-      continue;
-    }
-
+gameServer.getWorld().getNodes().forEach((node)=>{
+    if (!node) return;
     gameServer.removeNode(node);
-  }
+    
+  })
+ 
 
   gameServer.bots.loadNames();
 
   // Pauses the server
-  gameServer.run = false;
+  gameServer.running = false;
   this.gamePhase = 0;
 
   // Handles disconnections
@@ -109,12 +106,13 @@ TFFA.prototype.onPlayerSpawn = function (gameServer, player) {
     var pos, startMass;
 
     // Check if there are ejected mass in the world.
-    if (gameServer.nodesEjected.length > 0) {
+    let nodesEjected = gameServer.getEjectedNodes();
+    if (nodesEjected.length > 0) {
       var index = Math.floor(Math.random() * 100) + 1;
       if (index <= gameServer.config.ejectSpawnPlayer) {
         // Get ejected cell
-        var index = Math.floor(Math.random() * gameServer.nodesEjected.length);
-        var e = gameServer.nodesEjected[index];
+        var index = Math.floor(Math.random() * nodesEjected.length);
+        var e = nodesEjected[index];
 
         // Remove ejected mass
         gameServer.removeNode(e);
@@ -185,7 +183,7 @@ TFFA.prototype.updateLB = function (gameServer) {
       break;
     case 2:
       lb[0] = "Players Remaining";
-      lb[1] = "Alive:"
+      lb[1] = "Alive:";
       lb[2] = this.contenders.length + "/" + this.maxContenders;
       lb[3] = "Time Limit:";
       lb[4] = this.formatTime(this.timeLimit);

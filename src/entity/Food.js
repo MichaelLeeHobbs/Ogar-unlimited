@@ -9,7 +9,7 @@ function Food() {
   this.shouldSendUpdate = false;
 
   if (this.gameServer.config.foodMassGrow &&
-    this.gameServer.config.foodMassGrowPossiblity > Math.floor(Math.random() * 101)) {
+    this.gameServer.config.foodMassGrowPossibility > Math.floor(Math.random() * 101)) {
     this.grow();
   }
 }
@@ -42,16 +42,16 @@ Food.prototype.grow = function () {
   }.bind(this), this.gameServer.config.foodMassTimeout * 1000);
 };
 
-Food.prototype.sendUpdate = function () {
-  // Whether or not to include this cell in the update packet
-  if (this.moveEngineTicks == 0) {
-    return false;
-  }
-  if (this.shouldSendUpdate) {
-    this.shouldSendUpdate = false;
+Food.prototype.sendUpdate = function() {
+    // Whether or not to include this cell in the update packet
+    if (this.shouldSendUpdate) {
+        this.shouldSendUpdate = false;
+        return true;
+    }
+    if (this.moveEngineTicks == 0) {
+        return false;
+    }
     return true;
-  }
-  return true;
 };
 
 Food.prototype.onRemove = function (gameServer) {
@@ -61,3 +61,4 @@ Food.prototype.onRemove = function (gameServer) {
 Food.prototype.onConsume = function (consumer, gameServer) {
   consumer.addMass(this.mass);
 };
+

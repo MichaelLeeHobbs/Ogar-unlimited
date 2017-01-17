@@ -9,22 +9,21 @@ module.exports = {
   Rainbow: require('./Rainbow'),
   Debug: require('./Debug'),
   Zombie: require('./Zombie'),
-  TeamZ: require('./TeamZ.js'),
+// TeamZ: require('./TeamZ.js'),
   TeamX: require('./TeamX.js'),
   NCTeams: require('./NoCollisionTeams.js'),
-  NCTeamZ: require('./NoCollisionTeamZ.js'),
+ // NCTeamZ: require('./NoCollisionTeamZ.js'),
   NCTeamX: require('./NoCollisionTeamX.js'),
   Unlimitpvp: require('./Unlimitpvp.js'),
   UnlimitFFA: require('./Unlimitffa.js'),
   Leap: require('./Leap.js'),
-  Virus: require('./Virus.js'),
   BlackHole: require('./BlackHole.js'),
   TFFA: require('./TFFA.js'),
   VirusOff: require('./VirusOff.js'),
   SFFA: require('./SFFA.js'),
 };
 
-var get = function (id) {
+var get = function (id, gameServer) {
   var mode;
   switch (id) {
     case 1: // Teams
@@ -48,6 +47,9 @@ var get = function (id) {
     case 7: // Shrinking ffa
       mode = new module.exports.SFFA();
       break;
+    case 8: // Experimental v2
+      mode = new module.exports.Experimental2();
+      break;
     case 10: // Tournament
       mode = new module.exports.Tournament();
       break;
@@ -57,26 +59,23 @@ var get = function (id) {
     case 12: // Zombie
       mode = new module.exports.Zombie();
       break;
-    case 13: // Zombie Team
-      mode = new module.exports.TeamZ();
-      break;
+   // case 13: // Zombie Team
+     // mode = new module.exports.TeamZ();
+    //  break;
     case 14: // Experimental Team
       mode = new module.exports.TeamX();
       break;
     case 15: // No Collision Team
       mode = new module.exports.NCTeams();
       break;
-    case 16: // No Collision Zombie Team
-      mode = new module.exports.NCTeamZ();
-      break;
+  // case 16: // No Collision Zombie Team
+    //  mode = new module.exports.NCTeamZ();
+    //  break;
     case 17: // No Collision Experimental Team
       mode = new module.exports.NCTeamX();
       break;
     case 18: // leap
       mode = new module.exports.Leap();
-      break;
-    case 19:
-      mode = new module.exports.Virus();
       break;
     case 20: // Rainbow
       mode = new module.exports.Rainbow();
@@ -87,11 +86,17 @@ var get = function (id) {
     case 22: // BlackHole
       mode = new module.exports.BlackHole();
       break;
-    case 8: // Experimental v2
-      mode = new module.exports.Experimental2();
+    case 23: // No Collision Experimental Team
+      mode = new module.exports.NCTeamX();
       break;
     default: // FFA is default
-      mode = new module.exports.FFA();
+      if (gameServer && gameServer.pluginGamemodes[id]) {
+        mode = new gameServer.pluginGamemodes[id];
+
+      } else {
+
+        mode = new module.exports.FFA();
+      }
       break;
   }
   return mode;

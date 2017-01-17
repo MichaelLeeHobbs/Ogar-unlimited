@@ -1,3 +1,4 @@
+'use strict';
 var Cell = require('./Cell');
 
 function EjectedMass() {
@@ -30,34 +31,36 @@ EjectedMass.prototype.sendUpdate = function () {
 
 EjectedMass.prototype.onRemove = function (gameServer) {
   // Remove from list of ejected mass
-  var index = gameServer.nodesEjected.indexOf(this);
-  if (index != -1) {
-    gameServer.nodesEjected.splice(index, 1);
-  }
+  gameServer.removeEjectedNode(this);
 };
 
 EjectedMass.prototype.onConsume = function (consumer, gameServer) {
   // Adds mass to consumer
-  consumer.addMass(this.mass);
+  if (consumer.mass + this.mass > 5) consumer.addMass(this.mass); else consumer.mass = 10;
 };
 
 EjectedMass.prototype.onAutoMove = function (gameServer) {
   // Check for a beacon if experimental
-  var beacon = gameServer.gameMode.beacon;
+  var beacons = gameServer._nodesBeacon;
+  for (var i in beacons) {
+    var beacon = beacons[i];
+    if (beacon.quadrant != this.quadrant || !beacon) continue;
   if (gameServer.gameMode.ID === 8 && beacon && this.collisionCheck2(beacon.getSquareSize(), beacon.position)) {
     // The beacon has been feed
     beacon.feed(this, gameServer);
     return true;
   }
+  }
 
-  if (gameServer.nodesVirus.length < gameServer.config.virusMaxAmount) {
+  let virusNodes = gameServer.getVirusNodes();
+
     // Check for viruses
     var v = gameServer.getNearestVirus(this);
     if (v) { // Feeds the virus if it exists
       v.feed(this, gameServer);
       return true;
     }
-  }
+  
 };
 
 EjectedMass.prototype.moveDone = function (gameServer) {
@@ -65,5 +68,5 @@ EjectedMass.prototype.moveDone = function (gameServer) {
 };
 
 EjectedMass.prototype.onAdd = function (gameServer) {
-  gameServer.nodesEjected.push(this);
+  gameServer.addEjectedNodes(this);
 };

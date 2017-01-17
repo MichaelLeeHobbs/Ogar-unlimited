@@ -1,10 +1,11 @@
+'use strict';
 var Mode = require('./Mode');
 
 function Unlimitpvp() {
   Mode.apply(this, Array.prototype.slice.call(arguments));
 
   this.ID = 5;
-  this.name = "Unlimitpvp";
+  this.name = "UnlimitPVP";
   this.packetLB = 48;
 
   // Config (1 tick = 1000 ms)
@@ -32,8 +33,18 @@ Unlimitpvp.prototype = new Mode();
 Unlimitpvp.prototype.startGamePrep = function (gameServer) {
   this.gamePhase = 1;
   this.timer = this.prepTime;
-  gameServer.config.playerRecombineTime = 0;
-  gameServer.config.playerMaxCells = 100000;
+  gameServer.config.playerMaxCells = 64;
+    gameServer.config.playerRecombineTime = 0;
+    gameServer.config.playerFastDecay = 0;
+    gameServer.config.fastdecayrequire = 9000;
+    gameServer.config.FDmultiplyer = 2;
+    gameServer.config.playerSpeed = 40;
+    gameServer.config.splitSpeed = 82;
+    gameServer.config.playerMinMassSplit = 10;
+    gameServer.configborderLeft = 0;
+    gameServer.configborderRight = 7000;
+    gameServer.configborderTop = 0;
+    gameServer.configborderBottom = 7000;
 };
 
 Unlimitpvp.prototype.startGame = function (gameServer) {
@@ -71,16 +82,12 @@ Unlimitpvp.prototype.getSpectate = function () {
 
 Unlimitpvp.prototype.prepare = function (gameServer) {
   // Remove all cells
-  var len = gameServer.nodes.length;
-  for (var i = 0; i < len; i++) {
-    var node = gameServer.nodes[0];
-
-    if (!node) {
-      continue;
-    }
-
+  gameServer.getWorld().getNodes().forEach((node)=>{
+    if (!node) return;
     gameServer.removeNode(node);
-  }
+    
+  })
+ 
 
   gameServer.bots.loadNames();
 
@@ -186,7 +193,7 @@ Unlimitpvp.prototype.updateLB = function (gameServer) {
   switch (this.gamePhase) {
     case 0:
       lb[0] = "Welcome to";
-      lb[1] = "Andrews server,"
+      lb[1] = "Andrews server,";
       lb[2] = "Waiting for";
       lb[3] = "players: ";
       lb[4] = this.contenders.length + "/" + this.maxContenders;
